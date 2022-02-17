@@ -1,6 +1,6 @@
 # super-youtube-mp3
 
-CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments and automatically splits output into appropriately named files.
+CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments and automatically splits output into appropriately named files. Automatically adds ID3 tags to the files.
 
 ## Installation
 

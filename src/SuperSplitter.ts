@@ -1,11 +1,16 @@
-import ytdl, { Chapter, chooseFormatOptions, videoInfo } from 'ytdl-core'
+import ytdl, { Chapter, videoInfo } from 'ytdl-core'
 import * as fs from 'fs'
 import * as path from 'path'
 import ffmpeg from 'fluent-ffmpeg'
 import getArtistTitle from 'get-artist-title'
+import NodeID3 from 'node-id3'
 
 export interface SuperSplitterOptions {
-  url: string
+  output: string;
+  id3: boolean;
+  url: string;
+  quality: string
+  format: string
 }
 
 export interface ExtendedChapter extends Chapter {
@@ -56,8 +61,23 @@ export class SuperSplitter {
     })
   }
 
-  public async download (artist: string, album: string, output: string, quality: chooseFormatOptions['quality'], format?: string): Promise<void> {
-    const folderPath = path.resolve(path.join(output, `${artist} - ${album}`))
+  private async downloadVideo (quality, path): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const video = ytdl(this.options.url, {
+        quality: quality || 'highestaudio'
+      })
+        .on('error', reject)
+
+      video.pipe(fs.createWriteStream(path))
+
+      video.on('finish', () => {
+        resolve()
+      })
+    })
+  }
+
+  public async download (artist: string, album: string): Promise<void> {
+    const folderPath = path.resolve(path.join(this.options.output, `${artist} - ${album}`))
 
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true })
@@ -67,25 +87,10 @@ export class SuperSplitter {
 
     const chapters = SuperSplitter.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), this.video.videoDetails.chapters)
 
-    const downloadVideo = async (url, path): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        const video = ytdl(url, {
-          quality: quality || 'highestaudio'
-        })
-          .on('error', reject)
-
-        video.pipe(fs.createWriteStream(tempFilePath))
-
-        video.on('finish', () => {
-          resolve()
-        })
-      })
-    }
-
-    await downloadVideo(this.options.url, tempFilePath)
+    await this.downloadVideo(this.options.quality, tempFilePath)
 
     await Promise.allSettled(chapters.map(async (chapter, index) => {
-      const chapterFilePath = path.join(folderPath, `${SuperSplitter.formatTrackName(format, artist, album, index, chapter.title)}.mp3`)
+      const chapterFilePath = path.join(folderPath, `${SuperSplitter.formatTrackName(this.options.format, artist, album, String(index + 1), chapter.title)}.mp3`)
 
       return new Promise<void>((resolve, reject) => {
         ffmpeg(tempFilePath).outputOptions([
@@ -94,7 +99,11 @@ export class SuperSplitter {
           '-ss', String(chapter.start_time),
           '-t', String(chapter.end_time - chapter.start_time)
         ]).on('error', (err) => reject(err))
-          .on('end', () => resolve())
+          .on('end', () => {
+            SuperSplitter.addTags(chapterFilePath, this.options.url, artist, album, index + 1, chapter.title)
+
+            resolve()
+          })
           .saveToFile(chapterFilePath)
       })
     }))
@@ -102,15 +111,28 @@ export class SuperSplitter {
     fs.unlinkSync(tempFilePath)
   }
 
-  private static formatTrackName (format: string, artist: string, album: string, track: number, title: string): string {
+  private static formatTrackName (format: string, artist: string, album: string, track: string, title: string): string {
     if (!format) {
-      return `${track + 1} - ${title}`
+      return `${track} - ${title}`
     }
 
     return format
       .replace('%artist%', artist)
       .replace('%album%', album)
-      .replace('%track%', String(track + 1))
+      .replace('%track%', track)
       .replace('%title%', title)
+  }
+
+  private static addTags (filepath: string, url: string, artist: string, album: string, trackNumber: number, title: string): true | Error {
+    return NodeID3.write({
+      artist,
+      album,
+      trackNumber: String(trackNumber),
+      title,
+      userDefinedUrl: [{
+        description: 'Youtube URL',
+        url
+      }]
+    }, filepath)
   }
 }
