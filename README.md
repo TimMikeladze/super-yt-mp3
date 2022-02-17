@@ -16,7 +16,7 @@ Options:
   -al --album <album>      Name of the album. If not specified, the album will be extracted from the title.
   -f, --format <format>    Naming format of tracks. For example `%artist% - %album% - %track% - %title%` or `%track - %title%`
   -o, --output <path>      Output directory path. Required.
-  -q, --quality <quality>  URL of YouTube video. Required.
-  -u, --url <url>          URL of YouTube video. Defaults to highest quality.
+  -q, --quality <quality>  Quality of YouTube video. Defaults to highest quality.
+  -u, --url <url>          URL of YouTube video. Required.
   -h, --help               display help for command
 ```
