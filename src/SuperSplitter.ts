@@ -85,18 +85,17 @@ export class SuperSplitter {
     await downloadVideo(this.options.url, tempFilePath)
 
     await Promise.allSettled(chapters.map(async (chapter, index) => {
+      const chapterFilePath = path.join(folderPath, `${SuperSplitter.formatTrackName(format, artist, album, index, chapter.title)}.mp3`)
+
       return new Promise<void>((resolve, reject) => {
         ffmpeg(tempFilePath).outputOptions([
           '-vn',
           '-i', tempFilePath,
           '-ss', String(chapter.start_time),
           '-t', String(chapter.end_time - chapter.start_time)
-        ]).on('error', err => {
-          reject(err)
-        }).pipe(fs.createWriteStream(path.join(folderPath, `${SuperSplitter.formatTrackName(format, artist, album, index, chapter.title)}.mp3`)))
-          .on('end', () => {
-            resolve()
-          })
+        ]).on('error', (err) => reject(err))
+          .on('end', () => resolve())
+          .saveToFile(chapterFilePath)
       })
     }))
 
