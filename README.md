@@ -1,6 +1,6 @@
 # super-youtube-mp3
 
-CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments and automatically splits output into appropriately named files. Automatically adds ID3 tags to the files.
+CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments then splits output into appropriately named files. Automatically adds ID3 tags to the files.
 
 ## Installation
 
@@ -24,7 +24,6 @@ Options:
 
 ## How to run tests
 
-
 Provide a URL to a video and run the following command.
 
 ```shell
@@ -32,3 +31,12 @@ URL="video url" yarn jest
 ```
 
 > Note: The jest timeout is set to 30 seconds. A larger file or slow internet connection may cause the test to fail.
+
+
+## TODO
+
+- Concurrency option and default
+- Provide timestamps via command line arguments
+- Extract timestamps as text from video description or comments
+- Loading indicators
+- Prompts for confirming metadata before downloading file
