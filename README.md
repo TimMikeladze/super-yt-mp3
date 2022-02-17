@@ -15,6 +15,7 @@ Options:
   -ar, --artist <artist>   Name of the artist(s). If not specified, the artist will be extracted from the title.
   -al --album <album>      Name of the album. If not specified, the album will be extracted from the title.
   -f, --format <format>    Naming format of tracks. For example `%artist% - %album% - %track% - %title%` or `%track - %title%`
+  -id3, --id3 <id3>        Add ID3 tags to the output files. Defaults to `true`
   -o, --output <path>      Output directory path. Required.
   -q, --quality <quality>  Quality of YouTube video. Defaults to highest quality.
   -u, --url <url>          URL of YouTube video. Required.
