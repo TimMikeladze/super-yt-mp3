@@ -1,10 +1,10 @@
-# super-youtube-mp3
+# super-yt-mp3
 
 CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments then splits output into appropriately named files. Automatically adds ID3 tags to the files.
 
 ## Installation
 
-> yarn add super-youtube-mp3
+> yarn add super-yt-mp3
 
 > Note: ffmpeg is required.
 
