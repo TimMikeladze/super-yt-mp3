@@ -1,0 +1,14 @@
+{
+  "preset":"ts-jest",
+  "testEnvironment":"node",
+  "testPathIgnorePatterns":[
+    "<rootDir>/node_modules/",
+    "__tests__/migrations/"
+  ],
+  "testMatch":[
+    "**/?(*.)+(spec|test).[jt]s?(x)"
+  ],
+  "extensionsToTreatAsEsm":[
+    ".ts"
+  ]
+}

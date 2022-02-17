@@ -21,3 +21,14 @@ Options:
   -u, --url <url>          URL of YouTube video. Required.
   -h, --help               display help for command
 ```
+
+## How to run tests
+
+
+Provide a URL to a video and run the following command.
+
+```shell
+URL="video url" yarn jest
+```
+
+> Note: The jest timeout is set to 30 seconds. A larger file or slow internet connection may cause the test to fail.

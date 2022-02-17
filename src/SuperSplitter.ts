@@ -7,10 +7,10 @@ import NodeID3 from 'node-id3'
 
 export interface SuperSplitterOptions {
   output: string;
-  id3: boolean;
+  id3?: boolean;
   url: string;
-  quality: string
-  format: string
+  quality?: string
+  format?: string
 }
 
 export interface ExtendedChapter extends Chapter {
@@ -18,15 +18,15 @@ export interface ExtendedChapter extends Chapter {
 }
 
 export class SuperSplitter {
-  private readonly options: SuperSplitterOptions
+  readonly options: SuperSplitterOptions
   private video: videoInfo
 
   constructor (options: SuperSplitterOptions) {
     this.options = options
   }
 
-  public async init (url: string): Promise<void> {
-    this.video = await ytdl.getInfo(url)
+  public async init (): Promise<void> {
+    this.video = await ytdl.getInfo(this.options.url)
   }
 
   public async getArtistTitle (): Promise<string> {

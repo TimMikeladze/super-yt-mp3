@@ -51,7 +51,7 @@ const superSplitter = new SuperSplitter({
 let artist = options.artist
 let album = options.album
 
-superSplitter.init(options.url).then(async () => {
+superSplitter.init().then(async () => {
   if (!artist) {
     artist = await superSplitter.getArtistTitle()
   }
