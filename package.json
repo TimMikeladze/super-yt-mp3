@@ -1,9 +1,11 @@
 {
   "name": "super-youtube-mp3",
   "version": "0.0.1",
-  "description": "",
+  "description": "CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments and automatically splits output into appropriately named files.",
   "author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
-  "keywords": [],
+  "keywords": [
+    "youtube", "mp3", "youtube downloader", "chapters", "timestamps", "mp3", "youtube mp3"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/TimMikeladze/super-youtube-mp3.git"
