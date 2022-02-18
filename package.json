@@ -1,6 +1,6 @@
 {
   "name": "super-yt-mp3",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "CLI tools for converting YouTube videos to MP3 files. Extract timestamps from video chapters, description, comments and automatically splits output into appropriately named files.",
   "author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
   "keywords": [

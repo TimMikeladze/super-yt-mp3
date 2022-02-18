@@ -4,7 +4,7 @@ CLI tools for converting YouTube videos to MP3 files. Extract timestamps from vi
 
 ## Installation
 
-> yarn add super-yt-mp3
+> yarn global add super-yt-mp3
 
 > Note: ffmpeg is required.
 
