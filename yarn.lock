@@ -1020,6 +1020,13 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@freetube/yt-comment-scraper@^6.1.0":
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/@freetube/yt-comment-scraper/-/yt-comment-scraper-6.1.0.tgz#13583dedf5cf0cff6d42d155ef5f2474c64fd4ee"
+  integrity sha512-Cj6Of7DPkTH1ax1AcaOn0xul179YsnfaNNoH11lQ4xUxUrmtf70Qj04+FDI+7/O/qsOR3RMq1mreCvM6BQI6Aw==
+  dependencies:
+    axios "^0.21.1"
+
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.3"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.9.3.tgz#f2564c744b387775b436418491f15fce6601f63e"
@@ -1756,6 +1763,13 @@ autoprefixer@^10.1.0:
     normalize-range "^0.1.2"
     picocolors "^1.0.0"
     postcss-value-parser "^4.2.0"
+
+axios@^0.21.1:
+  version "0.21.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
+  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
+  dependencies:
+    follow-redirects "^1.14.0"
 
 babel-jest@^27.5.1:
   version "27.5.1"
@@ -2906,6 +2920,11 @@ fluent-ffmpeg@2.1.2:
     async ">=0.2.9"
     which "^1.1.1"
 
+follow-redirects@^1.14.0:
+  version "1.14.8"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.8.tgz#016996fb9a11a100566398b1c6839337d7bfa8fc"
+  integrity sha512-1x0S9UVJHsQprFcEC/qnNzBLcIxsjAV905f/UkQxbclCsoTWlacCNOpQa/anodLl2uaEKFhfWOvM2Qg77+15zA==
+
 form-data@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.1.tgz#ebd53791b78356a99af9a300d4282c4d5eb9755f"
@@ -3000,6 +3019,11 @@ get-symbol-description@^1.0.0:
   dependencies:
     call-bind "^1.0.2"
     get-intrinsic "^1.1.1"
+
+get-youtube-chapters@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/get-youtube-chapters/-/get-youtube-chapters-1.1.0.tgz#51b4b73fd2dbd3b066c576710aa4a353c2d597e2"
+  integrity sha512-AzTVqxWTBmo4KrhRfgp6sGeA7PXXaMPCtB1KayLmnmRoSuijwnDKl/mTZCj9PwSOAOJmfidDlH0+cwApDQy3tQ==
 
 glob-parent@^5.1.2:
   version "5.1.2"

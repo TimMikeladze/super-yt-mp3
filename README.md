@@ -4,13 +4,15 @@ CLI tools for converting YouTube videos to MP3 files. Extract timestamps from vi
 
 ## Installation
 
-> yarn global add super-yt-mp3
+```shell
+npx super-yt-mp3
+```
 
 > Note: ffmpeg is required.
 
 ## Usage
 
-```
+```shell
 Options:
   -ar, --artist <artist>   Name of the artist(s). If not specified, the artist will be extracted from the title.
   -al --album <album>      Name of the album. If not specified, the album will be extracted from the title.
@@ -22,6 +24,12 @@ Options:
   -h, --help               display help for command
 ```
 
+## Examples
+
+```shell
+npx super-yt-mp3 -o ~/Downloads -u "url of video"
+```
+
 ## How to run tests
 
 Provide a URL to a video and run the following command.
@@ -31,7 +39,6 @@ URL="video url" yarn jest
 ```
 
 > Note: The jest timeout is set to 30 seconds. A larger file or slow internet connection may cause the test to fail.
-
 
 ## TODO
 

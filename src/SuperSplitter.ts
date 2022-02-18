@@ -4,6 +4,8 @@ import * as path from 'path'
 import ffmpeg from 'fluent-ffmpeg'
 import getArtistTitle from 'get-artist-title'
 import NodeID3 from 'node-id3'
+import youtubeChapters from 'get-youtube-chapters'
+import ytcm from '@freetube/yt-comment-scraper'
 
 export interface SuperSplitterOptions {
   output: string;
@@ -86,11 +88,30 @@ export class SuperSplitter {
     const tempFilePath = path.join(folderPath, 'temp.mp4')
 
     const videoChapters = this.video.videoDetails.chapters
-
+    const chaptersFromDescription = SuperSplitter.chaptersFromText(this.video.videoDetails.description)
     let extractedChapters = []
 
     if (videoChapters) {
       extractedChapters = videoChapters
+    } else if (chaptersFromDescription?.length) {
+      extractedChapters = chaptersFromDescription
+    }
+
+    if (!chaptersFromDescription || !chaptersFromDescription?.length) {
+      const { comments } = await ytcm.getComments({
+        videoId: this.video.videoDetails.videoId
+      })
+
+      extractedChapters = comments.reduce((acc, comment) => {
+        if (acc) {
+          return acc
+        }
+        const chapters = SuperSplitter.chaptersFromText(comment.text)
+        if (chapters?.length) {
+          return chapters
+        }
+        return acc
+      }, null)
     }
 
     if (!extractedChapters.length) {
@@ -149,5 +170,30 @@ export class SuperSplitter {
         url
       }]
     }, filepath)
+  }
+
+  private static cleanTitle (title: string): string {
+    title = title.trim()
+    if (title.startsWith('- ')) {
+      title = title.substring(2)
+    }
+    if (title.endsWith('-')) {
+      title = title.substring(0, title.length - 1)
+    }
+
+    return title
+  }
+
+  private static chaptersFromText (text: string = ''): Chapter[] {
+    try {
+      return youtubeChapters(text.replace(/<br\s*\/?>/gi, '\n'), {
+        extended: true
+      }).map(x => ({
+        start_time: x.start,
+        title: SuperSplitter.cleanTitle(x.title)
+      }))
+    } catch (e) {
+      return []
+    }
   }
 }
