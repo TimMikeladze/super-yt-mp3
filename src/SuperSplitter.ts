@@ -85,7 +85,22 @@ export class SuperSplitter {
 
     const tempFilePath = path.join(folderPath, 'temp.mp4')
 
-    const chapters = SuperSplitter.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), this.video.videoDetails.chapters)
+    const videoChapters = this.video.videoDetails.chapters
+
+    let extractedChapters = []
+
+    if (videoChapters) {
+      extractedChapters = videoChapters
+    }
+
+    if (!extractedChapters.length) {
+      extractedChapters = [{
+        start_time: 0,
+        title: album
+      }]
+    }
+
+    const chapters = SuperSplitter.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), extractedChapters)
 
     await this.downloadVideo(this.options.quality, tempFilePath)
 
