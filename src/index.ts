@@ -1,1 +1,1 @@
-export * from './SuperSplitter'
+export * from './SuperYT'

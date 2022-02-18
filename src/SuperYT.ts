@@ -34,7 +34,7 @@ export const defaultOptions = {
   batchSize: 2
 }
 
-export class SuperSplitter {
+export class SuperYT {
   readonly options: SuperSplitterOptions
   private video: videoInfo
 
@@ -101,7 +101,6 @@ export class SuperSplitter {
     }
 
     const tempFilePath = path.join(folderPath, `${artist} - ${album}.mp4`)
-    let chapters = []
 
     const thumbnail = this.video.videoDetails.thumbnails.sort((a, b) => b.width - a.width)?.[0]
 
@@ -112,11 +111,11 @@ export class SuperSplitter {
         )
     }
 
-    if (this.options.chapters) {
-      let extractedChapters = []
+    let extractedChapters = []
 
+    if (this.options.chapters) {
       const videoChapters = this.video.videoDetails.chapters
-      const chaptersFromDescription = SuperSplitter.chaptersFromText(this.video.videoDetails.description)
+      const chaptersFromDescription = SuperYT.chaptersFromText(this.video.videoDetails.description)
 
       if (videoChapters) {
         extractedChapters = videoChapters
@@ -133,51 +132,49 @@ export class SuperSplitter {
           if (acc) {
             return acc
           }
-          const chapters = SuperSplitter.chaptersFromText(comment.text)
+          const chapters = SuperYT.chaptersFromText(comment.text)
           if (chapters?.length) {
             return chapters
           }
           return acc
         }, null)
       }
+    }
 
-      if (!extractedChapters.length) {
-        extractedChapters = [{
-          start_time: 0,
-          title: album
-        }]
-      }
-
-      chapters = SuperSplitter.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), extractedChapters)
+    if (!extractedChapters.length) {
+      extractedChapters = [{
+        start_time: 0,
+        title: album
+      }]
     }
 
     await this.downloadVideo(this.options.quality, tempFilePath)
 
-    if (this.options.chapters) {
-      const promiseFns = chapters.map((chapter, index) => () => {
-        const chapterFilePath = path.join(folderPath, `${SuperSplitter.formatTrackName(this.options.format, artist, album, String(index + 1), chapter.title)}.mp3`)
+    const chapters = SuperYT.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), extractedChapters)
 
-        return new Promise<void>((resolve, reject) => {
-          ffmpeg(tempFilePath).outputOptions([
-            this.options.mp3 ? '-vn' : null,
-            '-i', tempFilePath,
-            '-ss', String(chapter.start_time),
-            '-t', String(chapter.end_time - chapter.start_time)
-          ].filter(x => !!x)).on('error', (err) => reject(err))
-            .on('end', () => {
-              if (this.options.id3 && this.options.mp3) {
-                SuperSplitter.addTags(chapterFilePath, this.options.url, artist, album, index + 1, chapter.title)
-              }
+    const promiseFns = chapters.map((chapter, index) => () => {
+      const chapterFilePath = path.join(folderPath, `${SuperYT.formatTrackName(this.options.format, artist, album, String(index + 1), chapter.title)}.mp3`)
 
-              resolve()
-            })
-            .saveToFile(chapterFilePath)
-        })
+      return new Promise<void>((resolve, reject) => {
+        ffmpeg(tempFilePath).outputOptions([
+          this.options.mp3 ? '-vn' : null,
+          '-i', tempFilePath,
+          '-ss', String(chapter.start_time),
+          '-t', String(chapter.end_time - chapter.start_time)
+        ].filter(x => !!x)).on('error', (err) => reject(err))
+          .on('end', () => {
+            if (this.options.id3 && this.options.mp3) {
+              SuperYT.addTags(chapterFilePath, this.options.url, artist, album, this.options.chapters ? index + 1 : null, chapter.title)
+            }
+
+            resolve()
+          })
+          .saveToFile(chapterFilePath)
       })
+    })
 
-      while (promiseFns.length) {
-        await Promise.allSettled(promiseFns.splice(0, this.options.batchSize).map(f => f()))
-      }
+    while (promiseFns.length) {
+      await Promise.allSettled(promiseFns.splice(0, this.options.batchSize).map(f => f()))
     }
 
     if (!this.options.keepVideo) {
@@ -197,11 +194,11 @@ export class SuperSplitter {
       .replace('%title%', title)
   }
 
-  private static addTags (filepath: string, url: string, artist: string, album: string, trackNumber: number, title: string): true | Error {
+  private static addTags (filepath: string, url: string, artist: string, album: string, trackNumber: number | null, title: string): true | Error {
     return NodeID3.write({
       artist,
       album,
-      trackNumber: String(trackNumber),
+      trackNumber: trackNumber ? String(trackNumber) : undefined,
       title,
       userDefinedUrl: [{
         description: 'Youtube URL',
@@ -228,7 +225,7 @@ export class SuperSplitter {
         extended: true
       }).map(x => ({
         start_time: x.start,
-        title: SuperSplitter.cleanTitle(x.title)
+        title: SuperYT.cleanTitle(x.title)
       }))
     } catch (e) {
       return []

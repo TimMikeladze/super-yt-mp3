@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { SuperSplitter } from './SuperSplitter'
+import { SuperYT } from './SuperYT'
 
 interface CommanderOptions {
   url: string
@@ -48,7 +48,7 @@ if (!options.output) {
   process.exit(1)
 }
 
-const superSplitter = new SuperSplitter({
+const superSplitter = new SuperYT({
   url: options.url,
   output: options.output,
   quality: options.quality,

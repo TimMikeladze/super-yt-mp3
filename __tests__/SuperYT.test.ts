@@ -1,4 +1,4 @@
-import { SuperSplitter } from '../src'
+import { SuperYT } from '../src'
 import path from 'path'
 import fs from 'fs'
 import NodeID3 from 'node-id3'
@@ -13,8 +13,8 @@ describe('SuperSplitter', () => {
   beforeEach(clean)
   afterEach(clean)
 
-  it('happy path - downloads, splits and tags', async () => {
-    const splitter = new SuperSplitter({
+  it('happy path - downloads, splits into chapters and tags', async () => {
+    const splitter = new SuperYT({
       url: process.env.URL,
       output: './__tests__/output/'
     })
@@ -43,8 +43,8 @@ describe('SuperSplitter', () => {
     })
   })
 
-  it('downloads only video without splitting', async () => {
-    const splitter = new SuperSplitter({
+  it('downloads only video without chapters', async () => {
+    const splitter = new SuperYT({
       url: process.env.URL,
       output: './__tests__/output/',
       keepVideo: true,
@@ -62,5 +62,24 @@ describe('SuperSplitter', () => {
     const files = fs.readdirSync(folderPath)
     expect(files.length).toEqual(1)
     expect(files.find(file => file.endsWith('.mp4'))).toBeDefined()
+  })
+
+  it('downloads only audio without chapters', async () => {
+    const splitter = new SuperYT({
+      url: process.env.URL,
+      output: './__tests__/output/',
+      keepVideo: false,
+      chapters: false
+    })
+    await splitter.init()
+    const artist = await splitter.getArtistTitle()
+    const album = await splitter.getAlbumTitle()
+    await splitter.download(artist, album)
+    const folderPath = path.resolve(path.join(splitter.options.output, `${artist} - ${album}`))
+
+    expect(fs.existsSync(folderPath)).toBe(true)
+    const files = fs.readdirSync(folderPath)
+    expect(files.length).toEqual(2)
+    expect(files.find(file => file.endsWith('.mp3'))).toBeDefined()
   })
 })
