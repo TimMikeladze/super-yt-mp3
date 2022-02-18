@@ -6,17 +6,32 @@ import getArtistTitle from 'get-artist-title'
 import NodeID3 from 'node-id3'
 import youtubeChapters from 'get-youtube-chapters'
 import ytcm from '@freetube/yt-comment-scraper'
+import fetch from 'isomorphic-fetch'
 
 export interface SuperSplitterOptions {
   output: string;
   id3?: boolean;
+  chapters?: boolean
+  mp3?: boolean
   url: string;
   quality?: string
   format?: string
+  keepVideo?: boolean
+  art?: boolean
+  batchSize?: number
 }
 
 export interface ExtendedChapter extends Chapter {
     end_time?: number
+}
+
+export const defaultOptions = {
+  id3: true,
+  chapters: true,
+  mp3: true,
+  keepVideo: false,
+  art: true,
+  batchSize: 2
 }
 
 export class SuperSplitter {
@@ -24,7 +39,7 @@ export class SuperSplitter {
   private video: videoInfo
 
   constructor (options: SuperSplitterOptions) {
-    this.options = options
+    this.options = { ...defaultOptions, ...options }
   }
 
   public async init (): Promise<void> {
@@ -66,7 +81,7 @@ export class SuperSplitter {
   private async downloadVideo (quality, path): Promise<void> {
     return new Promise((resolve, reject) => {
       const video = ytdl(this.options.url, {
-        quality: quality || 'highestaudio'
+        quality: this.options.mp3 ? (quality || 'highestaudio') : (quality || 'highestvideo')
       })
         .on('error', reject)
 
@@ -85,66 +100,89 @@ export class SuperSplitter {
       fs.mkdirSync(folderPath, { recursive: true })
     }
 
-    const tempFilePath = path.join(folderPath, 'temp.mp4')
+    const tempFilePath = path.join(folderPath, `${artist} - ${album}.mp4`)
+    let chapters = []
 
-    const videoChapters = this.video.videoDetails.chapters
-    const chaptersFromDescription = SuperSplitter.chaptersFromText(this.video.videoDetails.description)
-    let extractedChapters = []
+    const thumbnail = this.video.videoDetails.thumbnails.sort((a, b) => b.width - a.width)?.[0]
 
-    if (videoChapters) {
-      extractedChapters = videoChapters
-    } else if (chaptersFromDescription?.length) {
-      extractedChapters = chaptersFromDescription
+    if (thumbnail && this.options.art && this.options.mp3) {
+      await fetch(thumbnail.url)
+        .then(res =>
+          res.body.pipe(fs.createWriteStream(path.join(folderPath, 'cover.png')))
+        )
     }
 
-    if (!chaptersFromDescription || !chaptersFromDescription?.length) {
-      const { comments } = await ytcm.getComments({
-        videoId: this.video.videoDetails.videoId
-      })
+    if (this.options.chapters) {
+      let extractedChapters = []
 
-      extractedChapters = comments.reduce((acc, comment) => {
-        if (acc) {
+      const videoChapters = this.video.videoDetails.chapters
+      const chaptersFromDescription = SuperSplitter.chaptersFromText(this.video.videoDetails.description)
+
+      if (videoChapters) {
+        extractedChapters = videoChapters
+      } else if (chaptersFromDescription?.length) {
+        extractedChapters = chaptersFromDescription
+      }
+
+      if (!chaptersFromDescription || !chaptersFromDescription?.length) {
+        const { comments } = await ytcm.getComments({
+          videoId: this.video.videoDetails.videoId
+        })
+
+        extractedChapters = comments.reduce((acc, comment) => {
+          if (acc) {
+            return acc
+          }
+          const chapters = SuperSplitter.chaptersFromText(comment.text)
+          if (chapters?.length) {
+            return chapters
+          }
           return acc
-        }
-        const chapters = SuperSplitter.chaptersFromText(comment.text)
-        if (chapters?.length) {
-          return chapters
-        }
-        return acc
-      }, null)
-    }
+        }, null)
+      }
 
-    if (!extractedChapters.length) {
-      extractedChapters = [{
-        start_time: 0,
-        title: album
-      }]
-    }
+      if (!extractedChapters.length) {
+        extractedChapters = [{
+          start_time: 0,
+          title: album
+        }]
+      }
 
-    const chapters = SuperSplitter.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), extractedChapters)
+      chapters = SuperSplitter.addChapterEndTimes(Number(this.video.videoDetails.lengthSeconds), extractedChapters)
+    }
 
     await this.downloadVideo(this.options.quality, tempFilePath)
 
-    await Promise.allSettled(chapters.map(async (chapter, index) => {
-      const chapterFilePath = path.join(folderPath, `${SuperSplitter.formatTrackName(this.options.format, artist, album, String(index + 1), chapter.title)}.mp3`)
+    if (this.options.chapters) {
+      const promiseFns = chapters.map((chapter, index) => () => {
+        const chapterFilePath = path.join(folderPath, `${SuperSplitter.formatTrackName(this.options.format, artist, album, String(index + 1), chapter.title)}.mp3`)
 
-      return new Promise<void>((resolve, reject) => {
-        ffmpeg(tempFilePath).outputOptions([
-          '-vn',
-          '-i', tempFilePath,
-          '-ss', String(chapter.start_time),
-          '-t', String(chapter.end_time - chapter.start_time)
-        ]).on('error', (err) => reject(err))
-          .on('end', () => {
-            SuperSplitter.addTags(chapterFilePath, this.options.url, artist, album, index + 1, chapter.title)
+        return new Promise<void>((resolve, reject) => {
+          ffmpeg(tempFilePath).outputOptions([
+            this.options.mp3 ? '-vn' : null,
+            '-i', tempFilePath,
+            '-ss', String(chapter.start_time),
+            '-t', String(chapter.end_time - chapter.start_time)
+          ].filter(x => !!x)).on('error', (err) => reject(err))
+            .on('end', () => {
+              if (this.options.id3 && this.options.mp3) {
+                SuperSplitter.addTags(chapterFilePath, this.options.url, artist, album, index + 1, chapter.title)
+              }
 
-            resolve()
-          })
-          .saveToFile(chapterFilePath)
+              resolve()
+            })
+            .saveToFile(chapterFilePath)
+        })
       })
-    }))
 
-    fs.unlinkSync(tempFilePath)
+      while (promiseFns.length) {
+        await Promise.allSettled(promiseFns.splice(0, this.options.batchSize).map(f => f()))
+      }
+    }
+
+    if (!this.options.keepVideo) {
+      fs.unlinkSync(tempFilePath)
+    }
   }
 
   private static formatTrackName (format: string, artist: string, album: string, track: string, title: string): string {

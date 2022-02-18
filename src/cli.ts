@@ -10,16 +10,24 @@ interface CommanderOptions {
   artist?: string
   album?: string
   format?: string
-  id3?: string
+  id3?: boolean
+  chapters?: boolean
+  mp3?: boolean
+  art?: boolean
+  keepVideo?: boolean
 }
 
 const program = new Command()
 
 program.option('-ar, --artist <artist>', 'Name of the artist(s). If not specified, the artist will be extracted from the title.')
 program.option('-al --album <album>', 'Name of the album. If not specified, the album will be extracted from the title.')
-program.option('-f, --format <format>', 'Naming format of tracks. For example `%artist% - %album% - %track% - %title%` or `%track - %title%`')
-
-program.option('-id3, --id3 <id3>', 'Add ID3 tags to the output files. Defaults to `true`')
+program.option('-bs --batch-size <batchSize>', 'Number of files to process concurrently. Default: 2', parseInt)
+program.option('-f, --format <format>', 'Naming format of tracks. For example `%artist% - %album% - %track% - %title%` or `%track - %title%`.')
+program.option('-na, --no-art', 'Skip downloading album art.')
+program.option('-nc, --no-chapters', 'Skip splitting output into chapters.')
+program.option('-ni, --no-id3', 'Skip adding ID3 tags to the output files. Only works with MP3 files.')
+program.option('-nm, --no-mp3', 'Skip converting output to mp3. Useful for downloading video. Album art will not be downloaded.')
+program.option('-kv --keep-video', 'Keep the original video file.')
 program.option('-o, --output <path>', 'Output directory path. Required.')
 program.option('-q, --quality <quality>', 'Quality of YouTube video. Defaults to highest quality.')
 program.option('-u, --url <url>', 'URL of YouTube video. Required.')
@@ -44,8 +52,12 @@ const superSplitter = new SuperSplitter({
   url: options.url,
   output: options.output,
   quality: options.quality,
-  id3: options?.id3 !== 'false',
-  format: options.format
+  id3: options.id3,
+  chapters: options.chapters,
+  mp3: options.mp3,
+  format: options.format,
+  keepVideo: options.keepVideo,
+  art: options.art
 })
 
 let artist = options.artist
