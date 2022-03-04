@@ -141,7 +141,7 @@ export class SuperYT {
       }
     }
 
-    if (!extractedChapters.length) {
+    if (!extractedChapters?.length) {
       extractedChapters = [{
         start_time: 0,
         title: album
